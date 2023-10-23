@@ -157,13 +157,13 @@ def graph_to_geogebra(G,ggb_filename):
             f.write(r'<objColor r="77" g="77" b="255" alpha="0"/>' +"\n")
             f.write(r'<layer val="0"/>' +"\n")
             f.write(r'<labelMode val="0"/>' +"\n")
-            f.write(f'<coords x="{pos[v][0]}" y="{pos[v][1]}" z="1"/>' +"\n")
+            f.write(f'<coords x="{float(pos[v][0])}" y="{float(pos[v][1])}" z="1"/>' +"\n")  # force evaluation of expressions as floats
             f.write(r'<pointSize val="5"/>' +"\n")
             f.write(r'<pointStyle val="0"/>' +"\n")
             f.write(r'</element>' +"\n")
         
         for e in G.edges(sort=False):
-            label=f"edge_{e[0]}_{e[1]}"
+            label=f"edge-{e[0]}-{e[1]}"
             f.write(r'<command name="Segment">' +"\n")
             f.write(f'<input a0="{e[0]}" a1="{e[1]}"/>' + "\n")
             f.write(f'<output a0="{label}"/>' +"\n")
