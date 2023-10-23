@@ -125,6 +125,69 @@ def geogebra_graph_plot(G):
     return(G.plot(vertex_colors=vertex_colors,edge_colors=edge_colors))
 
 
+def graph_to_geogebra(G,ggb_filename):
+    '''
+    Converts a SageMath graph into a GeoGebra file, where vertices become points and edges become line segments.
+    Vertex labels become vertex labels.
+    The graph's pos dictionary is used for the position of the points.
+    '''
+    with open("geogebra.xml","wt") as f:
+        f.write(r'<?xml version="1.0" encoding="utf-8"?>' +"\n")
+        f.write(r'<geogebra format="5.0">' +"\n")
+        
+        f.write(r'<euclidianView>' +"\n")
+        f.write(r'<viewNumber viewNo="1"/>' +"\n")
+        #f.write(r'<size width="2339" height="1196"/>' +"\n")
+        #f.write(r'<coordSystem xZero="888.4649186451074" yZero="465.3980334757529" scale="653.3442584680625" yscale="653.3442584680623"/>' +"\n")
+        f.write(r'<evSettings axes="false" grid="false" gridIsBold="false" pointCapturing="3" rightAngleStyle="1" checkboxSize="26" gridType="3"/>' +"\n")
+        f.write(r'<bgColor r="255" g="255" b="255"/>' +"\n")
+        f.write(r'<axesColor r="0" g="0" b="0"/>' +"\n")
+        f.write(r'<gridColor r="192" g="192" b="192"/>' +"\n")
+        f.write(r'<lineStyle axes="1" grid="0"/>' +"\n")
+        f.write(r'<axis id="0" show="true" label="" unitLabel="" tickStyle="1" showNumbers="true"/>' +"\n")
+        f.write(r'<axis id="1" show="true" label="" unitLabel="" tickStyle="1" showNumbers="true"/>' +"\n")
+        f.write(r'</euclidianView>' +"\n")
+        
+        f.write(r'<construction>' +"\n")
+        
+        pos=G.get_pos()
+        for v in G.vertices(sort=False):
+            f.write(f'<element type="point" label="{v}">' +"\n")
+            f.write(r'<show object="true" label="true"/>' +"\n")
+            f.write(r'<objColor r="77" g="77" b="255" alpha="0"/>' +"\n")
+            f.write(r'<layer val="0"/>' +"\n")
+            f.write(r'<labelMode val="0"/>' +"\n")
+            f.write(f'<coords x="{pos[v][0]}" y="{pos[v][1]}" z="1"/>' +"\n")
+            f.write(r'<pointSize val="5"/>' +"\n")
+            f.write(r'<pointStyle val="0"/>' +"\n")
+            f.write(r'</element>' +"\n")
+        
+        for e in G.edges(sort=False):
+            label=f"edge_{e[0]}_{e[1]}"
+            f.write(r'<command name="Segment">' +"\n")
+            f.write(f'<input a0="{e[0]}" a1="{e[1]}"/>' + "\n")
+            f.write(f'<output a0="{label}"/>' +"\n")
+            f.write(r'</command>' +"\n")
+            f.write(f'<element type="segment" label="{label}">' +"\n")
+            f.write(r'<show object="true" label="false"/>' +"\n")  # do not show edge label
+            f.write(r'<objColor r="0" g="0" b="0" alpha="0"/>' +"\n")
+            f.write(r'<layer val="0"/>' +"\n")
+            f.write(r'<labelMode val="0"/>' +"\n")
+            #f.write(r'<coords x="-0.8400000000000001" y="1.2800000000000002" z="4.5984"/>' +"\n")
+            f.write(r'<lineStyle thickness="5" type="0" typeHidden="1" opacity="178"/>' +"\n")
+            #f.write(r'<outlyingIntersections val="false"/>' +"\n")
+            #f.write(r'<keepTypeOnTransform val="true"/>' +"\n")
+            f.write(r'</element>' +"\n")
+        
+        f.write(r'' +"\n")
+        f.write(r'</construction>' +"\n")
+        f.write(r'</geogebra>' +"\n")
+        # f.write(r'' +"\n")
+    
+    with zipfile.ZipFile(ggb_filename,'w') as f:
+        f.write("geogebra.xml")
+    
+
 if __name__=="__main__":
     
     # Demonstration code
@@ -141,4 +204,8 @@ if __name__=="__main__":
     print("edges:")
     for e in G.edges(sort=False):
         print(e,G.edge_label(e[0],e[1]))
-            
+    
+    import sage.graphs.generators.smallgraphs
+    G=sage.graphs.generators.smallgraphs.PetersenGraph()
+    graph_to_geogebra(G,"petersen.ggb")
+    
