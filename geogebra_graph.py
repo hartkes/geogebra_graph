@@ -72,7 +72,7 @@ def geogebra_to_graph(ggb_filename):
             G.set_edge_label(e[0],e[1],label)
     
     # we need to extract the edge properties from a different object
-    for e in G.edges():
+    for e in G.edges(sort=False):
         label=G.edge_label(e[0],e[1])
         
         for elt in c['element']:
@@ -105,7 +105,7 @@ def geogebra_graph_plot(G):
     vertex_colors=dict()
     for color in colors.values():
         vertex_colors[color]=[]
-    for v in G.vertices():
+    for v in G.vertices(sort=False):
         color_of_v=G.get_vertex(v)['color'][:3]
         if color_of_v in colors:
             vertex_colors[colors[color_of_v]].append(v)
@@ -115,7 +115,7 @@ def geogebra_graph_plot(G):
     edge_colors=dict()
     for color in colors.values():
         edge_colors[color]=[]
-    for e in G.edges():
+    for e in G.edges(sort=False):
         color_of_e=G.edge_label(e[0],e[1])['color'][:3]
         if color_of_e in colors:
             edge_colors[colors[color_of_e]].append(e)
@@ -135,10 +135,10 @@ if __name__=="__main__":
     
     pos=G.get_pos()
     print("vertices:")
-    for v in G.vertices():
+    for v in G.vertices(sort=False):
         info=G.get_vertex(v)
         print(v,info,pos[v])
     print("edges:")
-    for e in G.edges():
+    for e in G.edges(sort=False):
         print(e,G.edge_label(e[0],e[1]))
             
