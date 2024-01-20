@@ -1,10 +1,7 @@
 # Helper functions that convert a GeoGebra figure into a SageMath graph, and for plotting the resulting graph.
 
 import zipfile
-import xmltodict
-# Note that the Python package xmltodict needs to be installed into Sage.
-# The following command will install the xmltodict package:
-# sage --pip install xmltodict
+import xml.etree.ElementTree as ET
 
 import sage.all
 
@@ -25,9 +22,10 @@ def geogebra_to_graph(ggb_filename):
     '''
     
     with zipfile.ZipFile(ggb_filename,'r') as f:
-        d=xmltodict.parse(f.read("geogebra.xml"))
-
-    c=d['geogebra']['construction']
+        root=ET.fromstring(f.read("geogebra.xml"))
+        # the root tag is geogebra
+    
+    c=root.find('construction')
 
     vertex_labels=[]  # vertices, as labels
     vertex_information=[]  # each vertex will have a dict of information (such as label, color, etc) about that vertex
@@ -35,20 +33,22 @@ def geogebra_to_graph(ggb_filename):
     pos=dict()
 
     # interpret points as vertices
-    for elt in c['element']:
-        if elt['@type']=='point':
-            vertex_labels.append(elt['@label'])
-            pos[v]=(float(elt['coords']['@x']),float(elt['coords']['@y']))
+    for elt in c.findall('element'):
+        if elt.attrib['type']=='point':
+            vertex_labels.append(elt.attrib['label'])
+            coords=elt.find('coords')
+            pos[v]=(float(coords.attrib['x']),float(coords.attrib['y']))
             
             # save vertex information, such as label, color, etc, in a dict
             info=dict()
             info['label']=vertex_labels[-1]
-            info['color']=(int(elt['objColor']['@r']),
-                           int(elt['objColor']['@g']),
-                           int(elt['objColor']['@b']),
-                           float(elt['objColor']['@alpha']))
-            info['size' ]=int(elt['pointSize']['@val'])
-            info['style']=int(elt['pointStyle']['@val'])
+            color=elt.find('objColor')
+            info['color']=(int(color.attrib['r']),
+                           int(color.attrib['g']),
+                           int(color.attrib['b']),
+                           float(color.attrib['alpha']))
+            info['size' ]=int(elt.find('pointSize').attrib['val'])
+            info['style']=int(elt.find('pointStyle').attrib['val'])
             vertex_information.append(info)
             
             v+=1
@@ -62,12 +62,13 @@ def geogebra_to_graph(ggb_filename):
         G.set_vertex(i,vertex_information[i])
 
     # interpret line segments as edges
-    for elt in c['command']:
-        if elt['@name']=='Segment':
+    for elt in c.findall('command'):
+        if elt.attrib['name']=='Segment':
             e=[]
-            e.append(vertex_labels.index(elt['input']['@a0']))  # first endpoint of this edge
-            e.append(vertex_labels.index(elt['input']['@a1']))  # second endpoint of the edge
-            label=elt['output']['@a0']
+            endpts=elt.find('input')
+            e.append(vertex_labels.index(endpts.attrib['a0']))  # first endpoint of this edge
+            e.append(vertex_labels.index(endpts.attrib['a1']))  # second endpoint of the edge
+            label=elt.find('output').attrib['a0']
             G.add_edge(e)
             G.set_edge_label(e[0],e[1],label)
     
@@ -75,16 +76,17 @@ def geogebra_to_graph(ggb_filename):
     for e in G.edges(sort=False):
         label=G.edge_label(e[0],e[1])
         
-        for elt in c['element']:
-            if elt['@type']=='segment' and elt['@label']==label:
+        for elt in c.findall('element'):
+            if elt.attrib['type']=='segment' and elt.attrib['label']==label:
                 # save vertex information, such as label, color, etc, in a dict
                 info=dict()
                 info['label']=label
-                info['color']=(int(elt['objColor']['@r']),
-                               int(elt['objColor']['@g']),
-                               int(elt['objColor']['@b']),
-                               float(elt['objColor']['@alpha']))
-                info['thickness']=int(elt['lineStyle']['@thickness'])
+                color=elt.find('objColor')
+                info['color']=(int(color.attrib['r']),
+                               int(color.attrib['g']),
+                               int(color.attrib['b']),
+                               float(color.attrib['alpha']))
+                info['thickness']=int(elt.find('lineStyle').attrib['thickness'])
                 G.set_edge_label(e[0],e[1],info)
     
     return G
