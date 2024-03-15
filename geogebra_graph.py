@@ -108,7 +108,10 @@ def geogebra_graph_plot(G):
     for color in colors.values():
         vertex_colors[color]=[]
     for v in G.vertices(sort=False):
-        color_of_v=G.get_vertex(v)['color'][:3]
+        try:
+            color_of_v=G.get_vertex(v)['color'][:3]
+        except TypeError:  # label is not a dictionary, or does not have 'color'
+            color_of_v=other_v
         if color_of_v in colors:
             vertex_colors[colors[color_of_v]].append(v)
         else:
@@ -118,7 +121,10 @@ def geogebra_graph_plot(G):
     for color in colors.values():
         edge_colors[color]=[]
     for e in G.edges(sort=False):
-        color_of_e=G.edge_label(e[0],e[1])['color'][:3]
+        try:
+            color_of_e=G.edge_label(e[0],e[1])['color'][:3]
+        except TypeError:  # label is not a dictionary, or does not have 'color'
+            color_of_e=other_e
         if color_of_e in colors:
             edge_colors[colors[color_of_e]].append(e)
         else:
