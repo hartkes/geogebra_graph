@@ -1,4 +1,4 @@
-# Helper functions that convert a GeoGebra figure into a SageMath graph, and for plotting the resulting graph.
+# Sage code for converting a GeoGebra figure into a SageMath graph, for plotting the resulting SageMath graph, and for exporting a SageMath graph into a GeoGebra figure.
 
 import zipfile
 import xml.etree.ElementTree as ET
@@ -160,14 +160,31 @@ def graph_to_geogebra(G,ggb_filename):
         
         pos=G.get_pos()
         for v in G.vertices(sort=False):
-            f.write(f'<element type="point" label="{v}">' +"\n")
+            # see if there is an object associated with v; if so, interpret it as a dictionary
+            info=G.get_vertex(v)
+            if info==None:
+                info=dict()  # empty dictionary
+            
+            f.write(f'<element type="point" label="{v}">' +"\n")  # cannot use info['label'], since this needs to match with the Sage vertex name for the edges.
             f.write(r'<show object="true" label="true"/>' +"\n")
-            f.write(r'<objColor r="77" g="77" b="255" alpha="0"/>' +"\n")
+            if 'color' in info:
+                f.write(f"<objColor r=\"{info['color'][0]}\""
+                                +f" g=\"{info['color'][1]}\""
+                                +f" b=\"{info['color'][2]}\""
+                            +f" alpha=\"{info['color'][3]}\"/>" +"\n")
+            else:  # default color
+                f.write(r'<objColor r="77" g="77" b="255" alpha="0"/>' +"\n")
             f.write(r'<layer val="0"/>' +"\n")
             f.write(r'<labelMode val="0"/>' +"\n")
             f.write(f'<coords x="{float(pos[v][0])}" y="{float(pos[v][1])}" z="1"/>' +"\n")  # force evaluation of expressions as floats
-            f.write(r'<pointSize val="5"/>' +"\n")
-            f.write(r'<pointStyle val="0"/>' +"\n")
+            if 'size' in info:
+                f.write(f"<pointSize val=\"{info['size']}\"/>" +"\n")
+            else:
+                f.write(r'<pointSize val="5"/>' +"\n")
+            if 'style' in info:
+                f.write(f"<pointStyle val=\"{info['style']}\"/>" +"\n")
+            else:
+                f.write(r'<pointStyle val="0"/>' +"\n")
             f.write(r'</element>' +"\n")
         
         for e in G.edges(sort=False):
